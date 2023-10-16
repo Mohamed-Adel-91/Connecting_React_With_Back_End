@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@hookform/resolvers": "^2.9.11",
+    "@hookform/resolvers": "^3.3.2",
     "@types/styled-components": "^5.1.26",
     "bootstrap": "^5.3.1",
     "immer": "^9.0.19",
