@@ -1,7 +1,14 @@
 import { useRef, useEffect, useState } from "react";
 import ProductList from "./ProductList";
 
+const connect = () => console.log("Connecting");
+const disconnect = () => console.log("Disconnecting");
+
 const App = () => {
+    useEffect(() => {
+        connect();
+        return () => disconnect();
+    });
     const ref = useRef<HTMLInputElement>(null);
     //afterRender
     useEffect(() => {
