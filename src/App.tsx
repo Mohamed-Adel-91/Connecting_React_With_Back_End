@@ -1,5 +1,11 @@
 import { useRef, useEffect, useState } from "react";
 import ProductList from "./ProductList";
+import axios from "axios";
+
+interface User {
+    id: number;
+    name: string;
+}
 
 const connect = () => console.log("Connecting");
 const disconnect = () => console.log("Disconnecting");
@@ -19,8 +25,15 @@ const App = () => {
         document.title = "My App";
     });
     const [category, setCategory] = useState("");
+
+    // Axios Example
+    const [users, setUsers] = useState<User[]>([]);
+    useEffect(() => {
+        axios.get<User[]>("https://jsonplaceholder.typicode.com/users")
+            .then(res => setUsers(res.data))
+    }, [])
     return (
-        <div>
+        <div className="container">
             <input ref={ref} type="text" className="form-control" />
             <select
                 title="category"
@@ -33,6 +46,7 @@ const App = () => {
                 <option value="Household">Household</option>
             </select>
             <ProductList category={category} />
+            <ul>{users.map(user => <li key={user.id}>{user.name}</li>)}</ul>
         </div>
     );
 };
