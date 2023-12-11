@@ -3,9 +3,6 @@ import ProductList from "./ProductList";
 import userService, { User } from "./services/user-service";
 import useUsers from "./hooks/useUser";
 
-
-
-
 const connect = () => console.log("Connecting");
 const disconnect = () => console.log("Disconnecting");
 
@@ -24,8 +21,8 @@ const App = () => {
         document.title = "My App";
     });
     const [category, setCategory] = useState("");
-    /*********************************************** Beginning of Axios ***************************************************/
 
+    /*********************************************** Beginning of Axios ***************************************************/
     const { users, error, isLoading, setUsers, setError } = useUsers();
 
     // Deleting Data
@@ -59,7 +56,6 @@ const App = () => {
             name: `updated : ${user.name}` + "!"
         }
         setUsers(users.map(u => u.id === user.id ? updatedUser : u))
-
         userService.update(updatedUser)
             .catch(err => {
                 setError(err.message)

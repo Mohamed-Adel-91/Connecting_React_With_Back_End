@@ -15,7 +15,7 @@ class HttpService {
         return { request , cancel: ()=> controller.abort()}
     }
     delete(id: number){
-        return apiClient.delete(this.endpoint + id)
+        return apiClient.delete(this.endpoint + "/" + id)
     }
     create<T>(entity: T){
         return apiClient.post(this.endpoint, entity)
