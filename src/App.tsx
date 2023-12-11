@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import ProductList from "./ProductList";
-import axios from "axios";
+import apiClient, { AxiosError, CanceledError } from './services/api-client'
 
 interface User {
     id: number;
@@ -26,12 +26,103 @@ const App = () => {
     });
     const [category, setCategory] = useState("");
 
-    // Axios Example
+    // Axios Example ( .then , .catch )
     const [users, setUsers] = useState<User[]>([]);
+    const [error, setError] = useState('');
+    const [isLoading, setLoading] = useState(false);
+
+    // useEffect(() => {
+    //     setLoading(true);
+    //     apiClient
+    //         .get<User[]>("/users")
+    //         .then(res => {
+    //             setUsers(res.data);
+    //             setLoading(false);
+    //         })
+    //         .catch(err => {
+    //             setError(err.message);
+    //             setLoading(false);
+    //         })
+    // }, [])
+
+    // working with async and await (try{} , catch(err){}) and adding cancelling a fetch request with controller func
     useEffect(() => {
-        axios.get<User[]>("https://jsonplaceholder.typicode.com/users")
-            .then(res => setUsers(res.data))
+        const controller = new AbortController(); // cancelling a fetch request
+        const fetchUsers = async () => {
+            try {
+                const res = await apiClient
+                    .get<User[]>("/users", { signal: controller.signal })
+                setUsers(res.data);
+            }
+            catch (err) {
+                if (err instanceof CanceledError) return; //cancelling a fetch request
+                setError((err as AxiosError).message);
+            }
+        }
+        fetchUsers();
+        return () => controller.abort(); //cancelling a fetch request
     }, [])
+
+    // cancelling a fetch request
+    useEffect(() => {
+        const controller = new AbortController();
+        setLoading(true);
+        apiClient
+            .get<User[]>("/users", { signal: controller.signal })
+            .then(res => setUsers(res.data))
+            .catch(err => {
+                if (err instanceof CanceledError) return;
+                setError(err.message);
+            })
+            .finally(() => {
+                setTimeout(() => { setError('') }, 5000);
+                setLoading(false)
+            })
+        return () => controller.abort();
+    }, [])
+
+    // Deleting Data
+    const deleteUser = (user: User) => {
+        const originalUsers = [...users];
+        setUsers(users.filter(u => u.id !== user.id));
+        apiClient
+            .delete("/users/" + user.id)
+            .catch(err => {
+                setError(err.message);
+                setUsers(originalUsers);
+            })
+    }
+
+    // Creating Data
+    const createUser = () => {
+        const originalUsers = [...users];
+        const newUser = { id: 0, name: "Mohamed Adel" };
+        setUsers([newUser, ...users]);
+        apiClient
+            .post('/users', newUser)
+            .then(({ data: savedUser }) => setUsers([savedUser, ...users]))
+            .catch(err => {
+                setError(err.message);
+                setUsers(originalUsers);
+            });
+    }
+
+    // Updating Data
+    const updateUser = (user: User) => {
+        const originalUsers = [...users];
+        const updatedUser = {
+            ...user,
+            name: `updated : ${user.name}` + "!"
+        }
+        setUsers(users.map(u => u.id === user.id ? updatedUser : u))
+
+        apiClient
+            .put("/users/" + user.id, updatedUser)
+            .catch(err => {
+                setError(err.message)
+                setUsers(originalUsers);
+            })
+    }
     return (
         <div className="container">
             <input ref={ref} type="text" className="form-control" />
@@ -46,7 +137,19 @@ const App = () => {
                 <option value="Household">Household</option>
             </select>
             <ProductList category={category} />
-            <ul>{users.map(user => <li key={user.id}>{user.name}</li>)}</ul>
+            {isLoading && <div className="spinner-border"></div>}
+            {error && <p className="text-danger">{error}</p>}
+            <button className="btn btn-primary mb-3" onClick={createUser}>Create User</button>
+            <ul className="list-group">
+                {users.map(user =>
+                    <li key={user.id} className="list-group-item d-flex justify-content-between">
+                        {user.name}
+                        <div >
+                            <button className="btn btn-outline-secondary mx-1" onClick={() => updateUser(user)}>Update</button>
+                            <button className="btn btn-outline-danger" onClick={() => deleteUser(user)}>Delete</button>
+                        </div>
+                    </li>)}
+            </ul>
         </div>
     );
 };
