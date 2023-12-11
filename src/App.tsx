@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import ProductList from "./ProductList";
-import { CanceledError } from './services/api-client'
 import userService, { User } from "./services/user-service";
+import useUsers from "./hooks/useUser";
 
 
 
@@ -25,64 +25,8 @@ const App = () => {
     });
     const [category, setCategory] = useState("");
     /*********************************************** Beginning of Axios ***************************************************/
-    // Axios Get Example ( .then , .catch )
-    const [users, setUsers] = useState<User[]>([]);
-    const [error, setError] = useState('');
-    const [isLoading, setLoading] = useState(false);
 
-    useEffect(() => {
-        setLoading(true);
-
-        const { request, cancel } = userService.getAll<User>();
-        request.then((res) => {
-            setUsers(res.data);
-            setLoading(false);
-        })
-            .catch(err => {
-                if (err instanceof CanceledError) return;
-                setError(err.message);
-                setLoading(false);
-            })
-        return () => cancel();
-    }, [])
-
-    // working with async and await (try{} , catch(err){}) and adding cancelling a fetch request with controller func
-    /*
-    useEffect(() => {
-        const fetchUsers = async () => {
-            const controller = new AbortController(); // cancelling a fetch request
-            try {
-                const res = await apiClient.get<User[]>("/users", { signal: controller.signal })
-                setUsers(res.data);
-            }
-            catch (err) {
-                if (err instanceof CanceledError) return; //cancelling a fetch request
-                setError((err as AxiosError).message);
-            }
-        }
-        fetchUsers();
-        return () => controller.abort(); //cancelling a fetch request
-    }, []) 
-    */
-    /*
-        // cancelling a fetch request
-        useEffect(() => {
-            const controller = new AbortController();
-            setLoading(true);
-            apiClient
-                .get<User[]>("/users", { signal: controller.signal })
-                .then(res => setUsers(res.data))
-                .catch(err => {
-                    if (err instanceof CanceledError) return;
-                    setError(err.message);
-                })
-                .finally(() => {
-                    setTimeout(() => { setError('') }, 5000);
-                    setLoading(false)
-                })
-            return () => controller.abort();
-        }, [])
-        */
+    const { users, error, isLoading, setUsers, setError } = useUsers();
 
     // Deleting Data
     const deleteUser = (user: User) => {
